@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">TBC_Classwork_6</string>
+    <string name="welcome">Welcome</string>
+    <string name="login">Login</string>
+    <string name="register">Register</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="remember_me">Remember me</string>
+    <string name="registration">Registration</string>
+    <string name="repeat_password">Repeat password</string>
+    <string name="empty_email">Email can not be empty</string>
+    <string name="empty_password">Password can not be empty</string>
+    <string name="incorrect_email">Wrong email</string>
+    <string name="successfully_login">Successful Login</string>
+    <string name="network_error">Check network connection</string>
+    <string name="wrong_credentials">Wrong Credentials</string>
+    <string name="successful_registration">Registered successfully</string>
+    <string name="passwords_doesnot_match">Passwords does not match</string>
+    <string name="repeated_password_empty">Both password values must be filled</string>
+    <string name="back">Back</string>
+</resources>

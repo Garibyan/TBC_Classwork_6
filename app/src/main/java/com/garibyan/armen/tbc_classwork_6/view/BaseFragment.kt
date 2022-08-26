@@ -13,16 +13,11 @@ import com.garibyan.armen.tbc_classwork_6.repository.DataStore
 
 typealias Inflate<T> = (LayoutInflater, ViewGroup?, Boolean) -> T
 
-abstract class BaseFragment<VB : ViewBinding, VM : ViewModel>(
-    private val inflate: Inflate<VB>,
-    private val viewModelClass: Class<VM>
+abstract class BaseFragment<VB : ViewBinding>(
+    private val inflate: Inflate<VB>
 ) : Fragment() {
 
-    protected val viewModel: VM by lazy {
-        ViewModelProvider(this)[viewModelClass]
-    }
 
-    protected lateinit var dataStore: DataStore
     private var _binding: VB? = null
     protected val binding get() = _binding!!
 
@@ -31,7 +26,6 @@ abstract class BaseFragment<VB : ViewBinding, VM : ViewModel>(
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        dataStore = DataStore(requireContext())
         _binding = inflate.invoke(inflater, container, false)
         return binding.root
     }

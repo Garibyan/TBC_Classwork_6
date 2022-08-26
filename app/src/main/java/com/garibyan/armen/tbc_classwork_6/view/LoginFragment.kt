@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.util.Patterns
 import android.view.View
 import android.widget.Toast
+import androidx.fragment.app.setFragmentResultListener
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -11,19 +13,25 @@ import androidx.navigation.fragment.findNavController
 import com.garibyan.armen.tbc_classwork_6.R
 import com.garibyan.armen.tbc_classwork_6.databinding.FragmentLoginBinding
 import com.garibyan.armen.tbc_classwork_6.network.Resource
+import com.garibyan.armen.tbc_classwork_6.utils.FragmentResult
+import com.garibyan.armen.tbc_classwork_6.utils.PreferenceKeys
 import com.garibyan.armen.tbc_classwork_6.viewmodel.LoginViewModel
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-class LoginFragment : BaseFragment<FragmentLoginBinding, LoginViewModel>(
-    FragmentLoginBinding::inflate, LoginViewModel::class.java
+
+@AndroidEntryPoint
+class LoginFragment : BaseFragment<FragmentLoginBinding>(
+    FragmentLoginBinding::inflate
 ) {
+
+    private val viewModel: LoginViewModel by viewModels()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.apply {
-            edtEmail.setText("eve.holt@reqres.in")
-        }
+        fragmentResultListener()
+        onClickListeners()
         isLoggedIn()
     }
 
@@ -44,14 +52,9 @@ class LoginFragment : BaseFragment<FragmentLoginBinding, LoginViewModel>(
     private fun isLoggedIn() {
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                dataStore.getToken.collect {
-                    when (it.isEmpty()) {
-                        true -> {
-                            onClickListeners()
-                        }
-                        false -> {
-                            navigateToHome()
-                        }
+                viewModel.getToken(PreferenceKeys.KEY_AUTH).collect {
+                    if (it != "") {
+                        findNavController().navigate(LoginFragmentDirections.actionLoginFragmentToHomeFragment())
                     }
                 }
             }
@@ -64,9 +67,11 @@ class LoginFragment : BaseFragment<FragmentLoginBinding, LoginViewModel>(
                 viewModel.loginFlow.collectLatest {
                     when (it) {
                         is Resource.Success -> {
-                            successfulState()
                             if (binding.chackBoxRememberMe.isChecked) {
-                                dataStore.saveToken(it.value.token.toString())
+                                viewModel.saveToken(it.value.token.toString())
+                            } else {
+                                successfulState()
+                                findNavController().navigate(LoginFragmentDirections.actionLoginFragmentToHomeFragment())
                             }
                         }
                         is Resource.Error -> {
@@ -81,8 +86,11 @@ class LoginFragment : BaseFragment<FragmentLoginBinding, LoginViewModel>(
         }
     }
 
-    private fun navigateToHome() {
-        findNavController().navigate(LoginFragmentDirections.actionLoginFragmentToHomeFragment())
+    private fun fragmentResultListener() {
+        setFragmentResultListener(FragmentResult.AUTH_KEY) { _, bundle ->
+            binding.edtEmail.setText(bundle.getString(FragmentResult.EMAIL, "No Value"))
+            binding.edtPassword.setText(bundle.getString(FragmentResult.PASSWORD, "No Value"))
+        }
     }
 
     private fun successfulState() {
@@ -92,9 +100,6 @@ class LoginFragment : BaseFragment<FragmentLoginBinding, LoginViewModel>(
             requireContext().getString(R.string.successfully_login),
             Toast.LENGTH_SHORT
         ).show()
-        if (!binding.chackBoxRememberMe.isChecked) {
-            navigateToHome()
-        }
     }
 
     private fun errorState(isNetworkError: Boolean) {

@@ -7,9 +7,10 @@
     tools:context=".view.HomeFragment">
 
     <TextView
+        android:id="@+id/txtEmail"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Email"
+        android:text="@string/email"
         android:textColor="@color/black"
         android:textSize="40sp"
         android:layout_gravity="center"/>
@@ -19,7 +20,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:id="@+id/btnLogout"
-        android:text="Logout"
+        android:text="@string/logout"
         android:textAllCaps="false"/>
 
 </FrameLayout>

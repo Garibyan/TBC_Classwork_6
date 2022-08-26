@@ -4,6 +4,9 @@ import android.os.Bundle
 import android.util.Patterns
 import android.view.View
 import android.widget.Toast
+import androidx.core.os.bundleOf
+import androidx.fragment.app.setFragmentResult
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -11,19 +14,21 @@ import androidx.navigation.fragment.findNavController
 import com.garibyan.armen.tbc_classwork_6.R
 import com.garibyan.armen.tbc_classwork_6.databinding.FragmentRegistrationBinding
 import com.garibyan.armen.tbc_classwork_6.network.Resource
+import com.garibyan.armen.tbc_classwork_6.utils.FragmentResult
 import com.garibyan.armen.tbc_classwork_6.viewmodel.RegistrationViewModel
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-class RegistrationFragment : BaseFragment<FragmentRegistrationBinding, RegistrationViewModel>(
-    FragmentRegistrationBinding::inflate, RegistrationViewModel::class.java
+@AndroidEntryPoint
+class RegistrationFragment : BaseFragment<FragmentRegistrationBinding>(
+    FragmentRegistrationBinding::inflate
 ) {
+
+    private val viewModel: RegistrationViewModel by viewModels()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.apply {
-            edtEmail.setText("eve.holt@reqres.in")
-        }
         onClickListeners()
     }
 
@@ -49,6 +54,7 @@ class RegistrationFragment : BaseFragment<FragmentRegistrationBinding, Registrat
                     when (it) {
                         is Resource.Success -> {
                             successfulState()
+                            buildFragmentResult()
                         }
                         is Resource.Error -> {
                             errorState(it.isNetworkError!!)
@@ -62,30 +68,28 @@ class RegistrationFragment : BaseFragment<FragmentRegistrationBinding, Registrat
         }
     }
 
+    private fun buildFragmentResult() {
+        setFragmentResult(
+            requestKey = FragmentResult.AUTH_KEY,
+            result = bundleOf(
+                FragmentResult.EMAIL to binding.edtEmail.text.toString(),
+                FragmentResult.PASSWORD to binding.edtPassword.text.toString()
+            )
+        )
+    }
+
     private fun successfulState() {
         binding.progressBar.visibility = View.GONE
-        Toast.makeText(
-            requireContext(),
-            requireContext().getString(R.string.successful_registration),
-            Toast.LENGTH_SHORT
-        ).show()
+        Toast.makeText(requireContext(), R.string.successful_registration, Toast.LENGTH_SHORT).show()
         findNavController().popBackStack()
     }
 
     private fun errorState(isNetworkError: Boolean) {
         binding.progressBar.visibility = View.GONE
         if (isNetworkError) {
-            Toast.makeText(
-                requireContext(),
-                requireContext().getString(R.string.network_error),
-                Toast.LENGTH_SHORT
-            ).show()
+            Toast.makeText(requireContext(), R.string.network_error, Toast.LENGTH_SHORT).show()
         } else {
-            Toast.makeText(
-                requireContext(),
-                requireContext().getString(R.string.wrong_credentials),
-                Toast.LENGTH_SHORT
-            ).show()
+            Toast.makeText(requireContext(), R.string.wrong_credentials, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -97,32 +101,16 @@ class RegistrationFragment : BaseFragment<FragmentRegistrationBinding, Registrat
         var isValid = false
         when (false) {
             !isEmptyEmail(email) -> {
-                Toast.makeText(
-                    requireContext(),
-                    requireContext().getText(R.string.empty_email),
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(requireContext(), R.string.empty_email, Toast.LENGTH_SHORT).show()
             }
             isValidEmail(email) -> {
-                Toast.makeText(
-                    requireContext(),
-                    requireContext().getText(R.string.incorrect_email),
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(requireContext(),R.string.incorrect_email, Toast.LENGTH_SHORT).show()
             }
             !isEmptyPassword(password) -> {
-                Toast.makeText(
-                    requireContext(),
-                    requireContext().getText(R.string.empty_password),
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(requireContext(), R.string.empty_password, Toast.LENGTH_SHORT).show()
             }
             isPasswordsMatch(password, repeatedPassword) -> {
-                Toast.makeText(
-                    requireContext(),
-                    R.string.passwords_doesnot_match,
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(requireContext(), R.string.passwords_doesnot_match, Toast.LENGTH_SHORT).show()
             }
             !isEmptyRepeatedPassword(repeatedPassword) -> {
                 Toast.makeText(requireContext(), R.string.repeated_password_empty, Toast.LENGTH_SHORT).show()
@@ -138,6 +126,4 @@ class RegistrationFragment : BaseFragment<FragmentRegistrationBinding, Registrat
     private fun isValidEmail(email: String) = Patterns.EMAIL_ADDRESS.matcher(email).matches()
     private fun isPasswordsMatch(password: String, repeatedPassword: String) =
         password == repeatedPassword
-
-
 }
